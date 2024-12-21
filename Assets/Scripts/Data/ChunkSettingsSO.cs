@@ -8,15 +8,15 @@ using UnityEngine.Rendering.Universal;
 [CreateAssetMenu(fileName = "Data", menuName = "ScriptableObjects/ChunkSettingSO", order = 1)]
 public class ChunkSettingsSO : ScriptableObject
 {
+    //This scriptable serve to hold and store the data of differnt biomes presets, from mesh generation data to render settings and bounds
     public event System.Action OnValuesUpdated;
     public event System.Action UpdateRenderSettings;
     public bool autoUpdate;   
 
-    [Header("Chunk General Settings")]
+[Header("Chunk General Settings")]
     public Vector3Int chunkSize;
     public float meshScale;
-    [Range(0, 1f)]
-    public float groundValue;
+    [Range(0, 1f)]public float groundValue;
     public Material material;
     public bool invert = false;
     public bool interpolation = true;
@@ -37,9 +37,7 @@ public class ChunkSettingsSO : ScriptableObject
 [Header("2D Height Map Cutout Top")]
     public bool addTopCutout = false;
     public float cutoutNoiseScale;
-
-    [Range(0, 1f)]
-    public float cutoutNoisePersistance;
+    [Range(0, 1f)] public float cutoutNoisePersistance;
     public float cutoutNoiseLacunarity;
     public int cutoutNoiseOctaves;
     public Vector2 cutoutMapSquichiness;
@@ -50,8 +48,7 @@ public class ChunkSettingsSO : ScriptableObject
 [Header("Plateau Settings")]
     public bool addPlateau = false;
     public int plateauModulo;
-    [Range(0.5f, 2)]
-    public float plateauModifMax;
+    [Range(0.5f, 2)] public float plateauModifMax;
     public int topPlateauWidth, bottomPlateauWidth;
 
 [Header("Easing Curve Main Noise")]
@@ -61,7 +58,7 @@ public class ChunkSettingsSO : ScriptableObject
 [Header("Edge Map Lerp Settings")]
     public bool addEdgeMapLerp = false;
     public int lerpRange;
-    //each Vector4 correspons to its corresponding axis (x, y, z) For Vector 4, x and y = min and max bounds of axis / z ans w if the edge is full (1) or empty (0)
+    //each Vector4 correspons to its corresponding axis (x, y, z) For Vector 4, x and y = min and max bounds of axis / z ans w if the edge need to be filed full (1) or empty (0)
     public Vector4 xBound, yBound, zBound;  
 
 [Header("Render Settings")]
@@ -79,7 +76,7 @@ public class ChunkSettingsSO : ScriptableObject
     public Color cameraBackgroundColor;
     public ParticleSystem cameraParticleSystem;
 
-     protected void OnValidate()
+    protected void OnValidate()
     {
         if(chunkSize.x < 1) chunkSize.x = 1;
         if(chunkSize.y < 1) chunkSize.y = 1;
@@ -106,15 +103,12 @@ public class ChunkSettingsSO : ScriptableObject
             NotifyOfUpdateValues();
     }
 
-    public void NotifyOfUpdateValues()
-    {
-        if(OnValuesUpdated != null)
-        {
+    public void NotifyOfUpdateValues(){
+        if(OnValuesUpdated != null) {
             OnValuesUpdated();
         }
     }
-    public void UpdateRenderSettingsEvent()
-    {
+    public void UpdateRenderSettingsEvent(){
         UpdateRenderSettings?.Invoke();   // This method is called by the ChunkManager when it needs to update the render settings.  // The subscribed scripts will then update their render settings based on the current ChunkSettingsSO.  // This is a way to have a centralized place where all render settings are managed and updated.  // The other scripts can subscribe to this event to be notified whenever the render settings need to be updated.  // This design pattern allows for easier management of render settings, as it decouples the scripts that need to update their render settings from the scripts that define the render settings.  // It also allows for easier testing, as the render settings can be easily changed and tested without affecting the other scripts.  // This design pattern is used extensively in Unity's rendering system, as it allows
     }
 }
