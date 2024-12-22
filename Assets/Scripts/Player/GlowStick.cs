@@ -4,18 +4,26 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Experimental.GlobalIllumination;
 
+//handle the glowstick behavior, its initial rotation and intensity
 public class GlowStick : MonoBehaviour
 {
-    public Light light;
-    public MeshRenderer mR;
-    public float timeToDie, lightMaxIntensity, lightMaxRange, startRotationSpeed;
-    public AnimationCurve lightOverTime;
-    public Color glowStart, glowEnd;
-    float timeCount;
+    [SerializeField] private Light pointLight;
+    [SerializeField] private MeshRenderer mR;
+
+    [SerializeField] private float startRotationSpeed;
+    [SerializeField] private float timeToDie; 
+
+    [SerializeField] private float lightMaxIntensity;
+
+    [SerializeField] private AnimationCurve lightOverTime;
+    [SerializeField] private float lightMaxRange;
+    [SerializeField] private Color glowEnd;
+    [SerializeField] private Color glowStart;
+    private float aliveTimeCount;
 
     public void Start()
     {
-        light.color = glowStart;
+        pointLight.color = glowStart;
         mR.material.color = glowStart;
         mR.material.EnableKeyword("_EMISSION");
 
@@ -29,12 +37,12 @@ public class GlowStick : MonoBehaviour
 
     void Update()
     {
-        timeCount += Time.deltaTime;
-        float ratio = timeCount/ timeToDie;
+        aliveTimeCount += Time.deltaTime;
+        float ratio = aliveTimeCount/ timeToDie;
 
-        light.intensity = lightOverTime.Evaluate(ratio) * lightMaxIntensity;
-        light.range = lightOverTime.Evaluate(ratio) * lightMaxRange;
+        pointLight.intensity = lightOverTime.Evaluate(ratio) * lightMaxIntensity;
+        pointLight.range = lightOverTime.Evaluate(ratio) * lightMaxRange;
 
-        mR.material.SetColor("_EmissionColor", Color.Lerp(glowStart * light.intensity, glowEnd, ratio));
+        mR.material.SetColor("_EmissionColor", Color.Lerp(glowStart * pointLight.intensity, glowEnd, ratio));
     }
 }

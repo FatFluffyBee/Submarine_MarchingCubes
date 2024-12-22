@@ -120,7 +120,7 @@ public class CameraControl : MonoBehaviour
         cam.position = Vector3.Lerp(cam.position, finalCameraPos, zoomLerpSpeed * Time.deltaTime);
     }
 
-    public void AddDelayedRotation(float horzRot, float vertRot, float rollRot) { // called when the submarine moves to be added to the camera
+    public void AddDelayedRotation(float horzRot, float vertRot, float rollRot) { // called in player movement when the submarine moves to be added to the camera
         target.Rotate(player.transform.up, horzRot, Space.World);
         target.Rotate(player.transform.right, vertRot, Space.World);
         target.Rotate(player.transform.forward, rollRot, Space.World);

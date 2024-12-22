@@ -2,9 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LoadMeshNearby : MonoBehaviour // act like a flag who says tnis go load mesh nearby. Might add useful local var later
+//add as a component to object which need to load and keep nearby chunk visible (flare for example)
+public class LoadMeshNearby : MonoBehaviour 
 {
-    float rangeToLoadChunk = 1f;
+    //float rangeToLoadChunk = 1f;
     private void Start() 
     {
         EndlessTerrain.instance.elementsWhoLoadMeshes.Add(this);

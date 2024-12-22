@@ -24,7 +24,7 @@ public class Flare : MonoBehaviour
     [SerializeField] private Color glowEnd;
     
     float lightFlickerValue;
-    float timeCount;
+    float aliveTimeCount;
 
     public void Start()
     {
@@ -47,8 +47,8 @@ public class Flare : MonoBehaviour
 
     void Update()
     {
-        timeCount += Time.deltaTime;
-        float ratio = timeCount/ timeToDie;
+        aliveTimeCount += Time.deltaTime;
+        float ratio = aliveTimeCount/ timeToDie;
         float pingPongValue = Mathf.PingPong(Time.time * lightPingPongIncr, maxLightIntensity - minLightIntensity);
         float overTimeIntensity = lightOverTime.Evaluate(ratio);
 

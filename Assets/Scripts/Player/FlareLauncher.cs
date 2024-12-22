@@ -2,42 +2,38 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//HAndle the behavior of the flare launcher weapon, to launch flare or glowstick (or any projectiles)
 public class FlareLauncher : WeaponSystem
 {
-    public Transform launchPoint;
-    public GameObject projectileOne, projectileTwo;
-    public float cDShotOne, cDShotTwo;
-    float cDShotOneCount, cDShotTwoCount;
+    [SerializeField] private Transform launchPoint;
+    
+    [SerializeField] private GameObject projOnePrefab;
+    [SerializeField] private float projOneRldDuration;
+    [SerializeField] private float projOneSpeed;
+    private float projOneRldTimer;
 
-    public float shotOneSpeed, shotTwoSpeed;
+    [SerializeField] private GameObject projTwoPRefab;
+    [SerializeField] private float projTwoRldDuration;
+    [SerializeField] private float projTwoSpeed;
+    private float projTwoRldTimer;
 
-    public override void FireOne()
-    {
-        if(cDShotOneCount < Time.time)
-        {
-            GameObject instance = Instantiate(projectileOne, transform.position, transform.rotation);
-            instance.GetComponent<Rigidbody>().velocity = transform.forward * shotOneSpeed;
-            cDShotOneCount = Time.time + cDShotOne;
+    public override void FireOne() {
+        if(projOneRldTimer < Time.time) {
+            GameObject instance = Instantiate(projOnePrefab, launchPoint.position, launchPoint.rotation);
+            instance.GetComponent<Rigidbody>().velocity = launchPoint.forward * projOneSpeed;
+            projOneRldTimer = Time.time + projOneRldDuration;
         }
     }
 
-    public override void ReleaseOne()
-    {
+    public override void ReleaseOne() {}
 
-    }
-
-    public override void FireTwo()
-    {
-        if(cDShotTwoCount < Time.time)
-        {
-            GameObject instance = Instantiate(projectileTwo, transform.position, transform.rotation);
-            instance.GetComponent<Rigidbody>().velocity = transform.forward * shotTwoSpeed;
-            cDShotTwoCount = Time.time + cDShotTwo;
+    public override void FireTwo() {
+        if(projTwoRldTimer < Time.time) {
+            GameObject instance = Instantiate(projTwoPRefab, launchPoint.position, launchPoint.rotation);
+            instance.GetComponent<Rigidbody>().velocity = launchPoint.forward * projTwoSpeed;
+            projTwoRldTimer = Time.time + projTwoRldDuration;
         }   
     }
 
-    public override void ReleaseTwo()
-    {
-
-    }
+    public override void ReleaseTwo() {}
 }
