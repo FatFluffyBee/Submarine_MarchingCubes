@@ -2,25 +2,38 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Handle the flare behavior, its flickering light and initial rotation
 public class Flare : MonoBehaviour
 {
-    public Light light;
-    public MeshRenderer mR;
-    public float timeToDie, minLightIntensity, maxLightIntensity, lightFlickerSpeed, lightMaxRange, startRotationSpeed;
-    public float variationMin, variationMax;
-    float variationFactor;
-    public AnimationCurve lightOverTime;
-    public Color glowStart, glowEnd;
+    [SerializeField] private Light pointLight;
+    [SerializeField] private MeshRenderer mR;
+
+    [SerializeField] private float startRotationSpeed;
+    [SerializeField] private float timeToDie;
+
+    [SerializeField] private float minLightIntensity; 
+    [SerializeField] private float maxLightIntensity;
+    [SerializeField] private float lightPingPongIncr;
+
+    [SerializeField] private float minLightFlicker;
+    [SerializeField] private float maxLightFlicker;
+
+    [SerializeField] private AnimationCurve lightOverTime;
+    [SerializeField] private float lightMaxRange;
+    [SerializeField] private Color glowStart;
+    [SerializeField] private Color glowEnd;
+    
+    float lightFlickerValue;
     float timeCount;
 
     public void Start()
     {
-        light.color = glowStart;
+        pointLight.color = glowStart;
         mR.material.color = glowStart;
         mR.material.EnableKeyword("_EMISSION");
 
         //Create an initial rotation and random orientation to the glowstick
-        Quaternion randomRot = Quaternion.Euler(new Vector3 (Random.Range(0f, 360), Random.Range(0, 360f), Random.Range(0f, 360f)));
+        Quaternion randomRot = Quaternion.Euler(new Vector3 (Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f)));
         transform.rotation = randomRot;
         GetComponent<Rigidbody>().angularVelocity = randomRot.eulerAngles.normalized * Time.deltaTime * startRotationSpeed;
 
@@ -29,20 +42,21 @@ public class Flare : MonoBehaviour
 
     void FixedUpdate()
     {
-        variationFactor = Random.Range(variationMin, variationMax);
+        lightFlickerValue = Random.Range(minLightFlicker, maxLightFlicker);
     }
 
     void Update()
     {
         timeCount += Time.deltaTime;
         float ratio = timeCount/ timeToDie;
-        
-        float newIntensity = minLightIntensity + Mathf.PingPong(Time.time * lightFlickerSpeed, maxLightIntensity - minLightIntensity) 
-        * lightOverTime.Evaluate(ratio) * variationFactor;
-        light.intensity = newIntensity;
+        float pingPongValue = Mathf.PingPong(Time.time * lightPingPongIncr, maxLightIntensity - minLightIntensity);
+        float overTimeIntensity = lightOverTime.Evaluate(ratio);
 
-        light.range = lightOverTime.Evaluate(ratio) * lightMaxRange;
-
+        //formula to calculate light intensity which combine a ping pong (alternate between 0 and b in a increment) an overtime curve evaluation and a random number to generate 
+        //a pulsating light similar to flare 
+        float newIntensity = minLightIntensity + pingPongValue * overTimeIntensity * lightFlickerValue;
+        pointLight.intensity = newIntensity;
+        pointLight.range = lightOverTime.Evaluate(ratio) * lightMaxRange;
         mR.material.SetColor("_EmissionColor", Color.Lerp(glowStart * newIntensity, glowEnd, ratio));
     }
 }

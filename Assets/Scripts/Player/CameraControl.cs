@@ -4,9 +4,21 @@ using System.Linq;
 using UnityEngine;
 
 // camera controls
-// basic idea is we pivot the camera pivot object depending on mouse or controller input and add a little lerp to it. Presing a button can reset the camera
+/*Basic Idea
+        - when the submarine turn up, right, left, down, the camera follow it
+        - when the player uses its mouse, the camera follows it
+        - the camera can pan close / away from the player and the max distance is determined by proximity to land to avoid clipping
+        - the camera is not sharp but follow a target pos and lerprotate towards it 
+        - after a little time, the camera will center back on a position looking in front of a submarine a little down
+        - this func can be called to if the player press space and must be cancelled 
+*/
 public class CameraControl : MonoBehaviour
 {
+    private Player player;
+    private Transform target;
+    private Transform cam;
+    bool debugLockCam = false;
+    
     [Header("Rotation")]
     [SerializeField] private float cameraTurnSpeed;
     [SerializeField] private float posLerpSpeed;
@@ -17,21 +29,22 @@ public class CameraControl : MonoBehaviour
     [Header("Reset")]
     [SerializeField] private float timeToResetCamera;
     [SerializeField] private float lerpResetCameraSpeed;
+     float timeToResetCameraCount;
 
     [Header("Zoom")]
     [SerializeField] private float zoomSensitivity;
     [SerializeField] private float zoomLerpSpeed;
-    [SerializeField] private float minInitZoom;
-    [SerializeField] private float maxInitZoom;
-
-    private Player player;
-    private Transform target;
-    private Transform cam;
-    float timeToResetCameraCount;
-    bool debugLockCam = false;
-    Vector3 camOffset;
+    [SerializeField] private float initZoom;
+    [SerializeField] private float minManualZoom;
+    [SerializeField] private float maxManualZoom;
+    [SerializeField] private float minHardZoom;
+    [SerializeField] private float zoomAdaptabilityTime; //when force into close camera by clipping, the actual zoom value will slowly lerp toward the actual value used
+    [SerializeField] private float clippingDist;
+    private float currentMaxZoomValue;
     private float zoomValue;
-
+    private float lerpedZoomValue; //used to recover slowly from forced zoom to avoid clipping
+    Vector3 camOffset;
+    
     private void Start()
     {
         player = FindObjectOfType<Player>();
@@ -39,27 +52,14 @@ public class CameraControl : MonoBehaviour
         target.SetPositionAndRotation(player.transform.position, player.transform.rotation);
         cam = transform.GetChild(0).transform;
         camOffset = cam.localPosition;
+        zoomValue = initZoom;
     }
 
     void Update()
     {
-        //Debug lock cam
-        if(Input.GetKeyDown(KeyCode.P)) {
-            debugLockCam = !debugLockCam;
-        }
-
-        /*Basic Idea
-        - when the submarine turn up, right, left, down, the camera follow it
-        - when the player uses its mouse, the camera follows it
-        - the camera can pan close / away from the player and the max distance is determined by proximity to land to avoid clipping
-        - the camera is not sharp but follow a target pos and lerprotate towards it 
-        - after a little time, the camera will center back on a position looking in front of a submarine a little down
-        - this func can be called to if the player press space and must be cancelled 
-        */
-
-        if(!debugLockCam){
+        if(!debugLockCam) {
+            //---Calculate Rotation
             target.position = player.transform.position;
-
             float horizontalInput = Input.GetAxis("Mouse X");
             float verticalInput = Input.GetAxis("Mouse Y");
 
@@ -74,21 +74,39 @@ public class CameraControl : MonoBehaviour
                     timeToResetCameraCount += Time.deltaTime;
             }
 
-            if(Input.GetAxis("MouseScrollDown") != 0) {
-                zoomValue -= zoomSensitivity * Input.GetAxis("MouseScrollDown"); 
-                zoomValue = Mathf.Clamp(zoomValue, minInitZoom, maxInitZoom);
-            }
-
-            //rotation target clamp for avoiding looping            
-            Vector3 euler = target.eulerAngles;
+            //---Clamp Rotation        
+            //Vector3 euler = target.eulerAngles;
             //euler.x = Mathf.Clamp((euler.x + 180) % 360, minRotationClamp, maxRotationClamp) - 180;
             //euler.y = Mathf.Clamp((euler.x + 180) % 360, minRotationClamp, maxRotationClamp) - 180;
             //euler.z = Mathf.Clamp((euler.z + 180) % 360, minRotationClamp, maxRotationClamp) - 180;
-            target.eulerAngles = euler;
+            //target.eulerAngles = euler;
 
+            //---Zoom Calculation
+            //determine max zoom distance to avoid clipping
+            float zoomClipLimit = CalculateMaxZoom(-cam.forward);
+            currentMaxZoomValue = Mathf.Max(zoomClipLimit, minHardZoom);
+
+            //take player input
+            if(Input.GetAxis("MouseScrollDown") != 0) {
+                zoomValue -= zoomSensitivity * Input.GetAxis("MouseScrollDown"); 
+                zoomValue = Mathf.Clamp(zoomValue, minManualZoom, currentMaxZoomValue);
+            }
+
+            //assign new zoomvalue + lerp old value if clipped to avoid grand camera range of movement
+            //lerpedZoomValue = Mathf.Lerp(lerpedZoomValue, zoomValue, zoomAdaptabilityTime * Time.deltaTime);
+            float clippedZoomValue = Mathf.Max(Mathf.Min(zoomValue, zoomClipLimit), minHardZoom);
+            
+            camOffset.z = clippedZoomValue;
+
+            //---Reset Rotation
             if(Input.GetKeyDown(KeyCode.Space)) {
                 target.rotation = player.transform.rotation;
             }
+        }
+
+        //Debug lock cam
+        if(Input.GetKeyDown(KeyCode.P)) {
+            debugLockCam = !debugLockCam;
         }
     }
 
@@ -98,8 +116,6 @@ public class CameraControl : MonoBehaviour
         transform.position = Vector3.Lerp(transform.position, target.position, posLerpSpeed * Time.deltaTime);
 
         //position of the camera to avoid terrain clipping
-        float zoomClipLimit = CalculateMaxZoom(-cam.forward);
-        camOffset.z = Mathf.Max(Mathf.Min(zoomValue, zoomClipLimit), minInitZoom);
         Vector3 finalCameraPos = transform.position - camOffset.x * cam.right + camOffset.y * cam.up - camOffset.z * cam.forward;
         cam.position = Vector3.Lerp(cam.position, finalCameraPos, zoomLerpSpeed * Time.deltaTime);
     }
@@ -114,13 +130,13 @@ public class CameraControl : MonoBehaviour
         target.transform.rotation = Quaternion.Slerp(target.transform.rotation, player.transform.rotation, lerpResetCameraSpeed * Time.deltaTime);
     }
 
-    private float CalculateMaxZoom(Vector3 direction) {
+    private float CalculateMaxZoom(Vector3 direction) {//calculate the maxzoom clipping distance
         int layerMask = LayerMask.GetMask("Terrain");
 
         Debug.DrawLine(transform.position, direction * 100f, Color.red, 10f);
-        if(Physics.Raycast(transform.position, direction, out RaycastHit hit, maxInitZoom, layerMask)) 
-            return hit.distance - 2f;
+        if(Physics.Raycast(transform.position, direction, out RaycastHit hit, maxManualZoom, layerMask)) 
+            return hit.distance - clippingDist;
 
-        return maxInitZoom;
+        return maxManualZoom;
     }
 }
