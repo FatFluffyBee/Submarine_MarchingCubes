@@ -12,9 +12,9 @@ public class ChunkSettingsSOEditor : Editor
 
         ChunkSettingsSO data = (ChunkSettingsSO)target;
         
-        if(GUILayout.Button("Update"))
+        if(GUILayout.Button("Update Mesh Settings"))
         {
-            data.NotifyOfUpdateValues();
+            data.UpdateMeshSettings();
         }
 
         if(GUILayout.Button("Update Render Settings"))

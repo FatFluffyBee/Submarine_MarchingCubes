@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
+//Math Func to generate a mesh from a 3d noise map using marching cubes algorithm
 public static class MarchingCubes
 {
     public static MeshData GenerateMeshDataFrom3DNoiseMap(float[,,] noiseMap, float groundValue, bool invert, bool interpolation)
@@ -12,86 +13,87 @@ public static class MarchingCubes
         MeshData meshesData = new MeshData();
         Vector3 meshOrigin = new Vector3(noiseMap.GetLength(0), noiseMap.GetLength(1), noiseMap.GetLength(2))/ 2f;
 
-        //iterate for each "cube" 
-        // recognize the number of the configuration using the binary method
-        //check the table and add triangles after calculating the interpolation between point with the noise 
-        //there is gonna be bullshit with face orientation
-
+        /// <summary>
+        /// We iterate for each "cube" of 8 vertex in the noise map bounds
+        /// recognize the number of the configuration, aka the faces to be built in the cube, using the binary method 
+        /// check the table and add triangles after calculating the interpolation between two points for each edge (to give a smooth look)
+        /// </summary>
 
         for (int x = 0; x < noiseMap.GetLength(0) - 1; x++)
             for (int y = 0; y < noiseMap.GetLength(1) - 1; y++)
-                for (int z = 0; z < noiseMap.GetLength(2) - 1; z++)
-                {
+                for (int z = 0; z < noiseMap.GetLength(2) - 1; z++) {
                     int confIndex = CheckConfigurationNumber(noiseMap, groundValue, invert, x, y, z);
 
-                    for (int i = 0; i < TriangleConnectionTable.GetLength(1); i += 3)
-                    {
+                    
+                    for (int i = 0; i < TriangleConnectionTable.GetLength(1); i += 3) {
                         if (TriangleConnectionTable[confIndex, i] == -1)
                             break;
 
-                        if(!interpolation)
-                        {
-                            Vector3 origin = new Vector3(x, y, z);
+                        Vector3 origin = new Vector3(x, y, z);
 
-                            Vector3 a1 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i], 0]];
-                            Vector3 a2 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i], 1]];
+                        //the configuration number (faces building built in the noise cube) give the sets of 3 edges connections (set of 2 point in the cube that made up a face)
+                        //with which we can get the vertex offset (normalized coordinate of the cube taking the left -back-down as origin) and determine 
+                        //the current set of 3 edges and 6 vertices (technically only 3 different vertices but the code is easier to wrap the code with 6)
 
-                            Vector3 b1 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 1], 0]];
-                            Vector3 b2 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 1], 1]];
+                        Vector3 a1 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i], 0]];
+                        Vector3 a2 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i], 1]];
+                        Vector3 b1 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 1], 0]];
+                        Vector3 b2 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 1], 1]];
+                        Vector3 c1 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 2], 0]];
+                        Vector3 c2 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 2], 1]];
+                        
+                        //Interpolation 
+                        Vector3 a = (a1 + a2) / 2f;
+                        Vector3 b = (b1 + b2) / 2f;
+                        Vector3 c = (c1 + c2) / 2f;
+ 
+                        if(interpolation) {
+                            //in place of getting the middle point of the edge, we put it more towards one point of the other depending of the noise value 
+                            //difference between the two. a1, b1 are position in space but also their noise value coordinate in the noiseMap array 
+                            //so the switchback is easy to do 
 
-                            Vector3 c1 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 2], 0]];
-                            Vector3 c2 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 2], 1]];
-
-                            Vector3 a = (a1 + a2) / 2f;
-                            Vector3 b = (b1 + b2) / 2f;
-                            Vector3 c = (c1 + c2) / 2f;
-
-                            meshesData.vertices.Add(a - meshOrigin);
-                            meshesData.vertices.Add(b - meshOrigin);
-                            meshesData.vertices.Add(c - meshOrigin);
-                            meshesData.triangles.Add(meshesData.vertices.Count - 3);
-                            meshesData.triangles.Add(meshesData.vertices.Count - 2);
-                            meshesData.triangles.Add(meshesData.vertices.Count - 1);
-                        }
-                        else
-                        {
-                            Vector3 origin = new Vector3Int(x, y, z); //origin is the current point being observed and that we used to determine the 7 other points in the cubes
-
-                            Vector3 a1 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i], 0]];
-                            Vector3 a2 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i], 1]];
                             float ax1 = noiseMap[(int)a1.x, (int)a1.y, (int)a1.z];
                             float ax2 = noiseMap[(int)a2.x, (int)a2.y, (int)a2.z];
-
-                            Vector3 b1 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 1], 0]];
-                            Vector3 b2 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 1], 1]];
                             float bx1 = noiseMap[(int)b1.x, (int)b1.y, (int)b1.z];
                             float bx2 = noiseMap[(int)b2.x, (int)b2.y, (int)b2.z];
-
-                            Vector3 c1 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 2], 0]];
-                            Vector3 c2 = origin + VertexOffset[EdgeConnection[TriangleConnectionTable[confIndex, i + 2], 1]];
                             float cx1 = noiseMap[(int)c1.x, (int)c1.y, (int)c1.z];
                             float cx2 = noiseMap[(int)c2.x, (int)c2.y, (int)c2.z];
 
-                            Vector3 a = a1 + (a2 - a1) * (groundValue - ax1) / (ax2 - ax1);
-                            Vector3 b = b1 + (b2 - b1) * (groundValue - bx1) / (bx2 - bx1);
-                            Vector3 c = c1 + (c2 - c1) * (groundValue - cx1) / (cx2 - cx1);
+                            a = a1 + (a2 - a1) * (groundValue - ax1) / (ax2 - ax1);
+                            b = b1 + (b2 - b1) * (groundValue - bx1) / (bx2 - bx1);
+                            c = c1 + (c2 - c1) * (groundValue - cx1) / (cx2 - cx1);
+                        }  
 
-                            meshesData.vertices.Add(a - meshOrigin);
-                            meshesData.vertices.Add(b - meshOrigin);
-                            meshesData.vertices.Add(c - meshOrigin);
-                            meshesData.triangles.Add(meshesData.vertices.Count - 3);
-                            meshesData.triangles.Add(meshesData.vertices.Count - 2);
-                            meshesData.triangles.Add(meshesData.vertices.Count - 1);
-                        }                      
+                        //add the resulting vertices and triangles to the mesh
+                        meshesData.vertices.Add(a - meshOrigin);
+                        meshesData.vertices.Add(b - meshOrigin);
+                        meshesData.vertices.Add(c - meshOrigin);
+                        meshesData.triangles.Add(meshesData.vertices.Count - 3);
+                        meshesData.triangles.Add(meshesData.vertices.Count - 2);
+                        meshesData.triangles.Add(meshesData.vertices.Count - 1);                    
                     }
                 }
 
         return meshesData;
-
     }
 
+    public static int CheckConfigurationNumber(float[,,] noiseMap, float groundValue, bool invert, int x, int y, int z) {
+        int count = 0;
 
-///     //            7             6
+        if (noiseMap[x, y, z] > groundValue) { count += 1; }
+        if (noiseMap[x + 1, y, z] > groundValue) { count += 2; }
+        if (noiseMap[x + 1, y, z + 1] > groundValue) { count += 4; }
+        if (noiseMap[x, y, z + 1] > groundValue) { count += 8; }
+        if (noiseMap[x, y + 1, z] > groundValue) { count += 16; }
+        if (noiseMap[x + 1, y + 1, z] > groundValue) { count += 32; }
+        if (noiseMap[x + 1, y + 1, z + 1] > groundValue) { count += 64; }
+        if (noiseMap[x, y + 1, z + 1] > groundValue) { count += 128; }
+
+        return invert ? 255 - count : count;
+    }
+
+    //               vertex num                    edge num 
+    //             7             6
     //            +-------------+               +-----6-------+   
     //          / |           / |             / |            /|   
     //        /   |         /   |           7  11          5  10
@@ -103,15 +105,18 @@ public static class MarchingCubes
 
 
     public static readonly int[,] EdgeConnection = new int[,]
-        {
-            {0,1}, {1,2}, {2,3}, {3,0},
-            {4,5}, {5,6}, {6,7}, {7,4},
-            {0,4}, {1,5}, {2,6}, {3,7}
-        };
+    {
+        {0,1}, {1,2}, {2,3}, {3,0},
+        {4,5}, {5,6}, {6,7}, {7,4},
+        {0,4}, {1,5}, {2,6}, {3,7}
+    };
+
 
     public static Vector3Int[] VertexOffset = new Vector3Int[]
-    { new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0), new Vector3Int(1, 0, 1), new Vector3Int(0, 0, 1),
-    new Vector3Int(0, 1, 0), new Vector3Int(1, 1, 0), new Vector3Int(1, 1, 1), new Vector3Int(0, 1, 1) };
+    {   
+        new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0), new Vector3Int(1, 0, 1), new Vector3Int(0, 0, 1),
+        new Vector3Int(0, 1, 0), new Vector3Int(1, 1, 0), new Vector3Int(1, 1, 1), new Vector3Int(0, 1, 1) 
+    };
 
     /// <summary>
     /// For any edge, if one vertex is inside of the surface and the other 
@@ -124,35 +129,7 @@ public static class MarchingCubes
     /// For each entry in the table, if edge #n is intersected, then bit #n is set to 1.
     /// cubeEdgeFlags[256]
     /// </summary>
-    public static readonly int[] CubeEdgeFlags = new int[]
-    {
-        0x000, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c, 0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
-        0x190, 0x099, 0x393, 0x29a, 0x596, 0x49f, 0x795, 0x69c, 0x99c, 0x895, 0xb9f, 0xa96, 0xd9a, 0xc93, 0xf99, 0xe90,
-        0x230, 0x339, 0x033, 0x13a, 0x636, 0x73f, 0x435, 0x53c, 0xa3c, 0xb35, 0x83f, 0x936, 0xe3a, 0xf33, 0xc39, 0xd30,
-        0x3a0, 0x2a9, 0x1a3, 0x0aa, 0x7a6, 0x6af, 0x5a5, 0x4ac, 0xbac, 0xaa5, 0x9af, 0x8a6, 0xfaa, 0xea3, 0xda9, 0xca0,
-        0x460, 0x569, 0x663, 0x76a, 0x066, 0x16f, 0x265, 0x36c, 0xc6c, 0xd65, 0xe6f, 0xf66, 0x86a, 0x963, 0xa69, 0xb60,
-        0x5f0, 0x4f9, 0x7f3, 0x6fa, 0x1f6, 0x0ff, 0x3f5, 0x2fc, 0xdfc, 0xcf5, 0xfff, 0xef6, 0x9fa, 0x8f3, 0xbf9, 0xaf0,
-        0x650, 0x759, 0x453, 0x55a, 0x256, 0x35f, 0x055, 0x15c, 0xe5c, 0xf55, 0xc5f, 0xd56, 0xa5a, 0xb53, 0x859, 0x950,
-        0x7c0, 0x6c9, 0x5c3, 0x4ca, 0x3c6, 0x2cf, 0x1c5, 0x0cc, 0xfcc, 0xec5, 0xdcf, 0xcc6, 0xbca, 0xac3, 0x9c9, 0x8c0,
-        0x8c0, 0x9c9, 0xac3, 0xbca, 0xcc6, 0xdcf, 0xec5, 0xfcc, 0x0cc, 0x1c5, 0x2cf, 0x3c6, 0x4ca, 0x5c3, 0x6c9, 0x7c0,
-        0x950, 0x859, 0xb53, 0xa5a, 0xd56, 0xc5f, 0xf55, 0xe5c, 0x15c, 0x055, 0x35f, 0x256, 0x55a, 0x453, 0x759, 0x650,
-        0xaf0, 0xbf9, 0x8f3, 0x9fa, 0xef6, 0xfff, 0xcf5, 0xdfc, 0x2fc, 0x3f5, 0x0ff, 0x1f6, 0x6fa, 0x7f3, 0x4f9, 0x5f0,
-        0xb60, 0xa69, 0x963, 0x86a, 0xf66, 0xe6f, 0xd65, 0xc6c, 0x36c, 0x265, 0x16f, 0x066, 0x76a, 0x663, 0x569, 0x460,
-        0xca0, 0xda9, 0xea3, 0xfaa, 0x8a6, 0x9af, 0xaa5, 0xbac, 0x4ac, 0x5a5, 0x6af, 0x7a6, 0x0aa, 0x1a3, 0x2a9, 0x3a0,
-        0xd30, 0xc39, 0xf33, 0xe3a, 0x936, 0x83f, 0xb35, 0xa3c, 0x53c, 0x435, 0x73f, 0x636, 0x13a, 0x033, 0x339, 0x230,
-        0xe90, 0xf99, 0xc93, 0xd9a, 0xa96, 0xb9f, 0x895, 0x99c, 0x69c, 0x795, 0x49f, 0x596, 0x29a, 0x393, 0x099, 0x190,
-        0xf00, 0xe09, 0xd03, 0xc0a, 0xb06, 0xa0f, 0x905, 0x80c, 0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x000
-    };
-
-
-    /// <summary>
-    /// For each of the possible vertex states listed in cubeEdgeFlags there is a specific triangulation
-    /// of the edge intersection points.  triangleConnectionTable lists all of them in the form of
-    /// 0-5 edge triples with the list terminated by the invalid value -1.
-    /// For example: triangleConnectionTable[3] list the 2 triangles formed when corner[0] 
-    /// and corner[1] are inside of the surface, but the rest of the cube is not.
-    /// triangleConnectionTable[256][16]
-    /// </summary>
+    
     public static readonly int[,] TriangleConnectionTable = new int[,]
     {
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
@@ -412,24 +389,6 @@ public static class MarchingCubes
         {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
      };
-
-
-    public static int CheckConfigurationNumber(float[,,] noiseMap, float groundValue, bool invert, int x, int y, int z)
-    {
-        int count = 0;
-
-        if (noiseMap[x, y, z] > groundValue) { count += 1; }
-        if (noiseMap[x + 1, y, z] > groundValue) { count += 2; }
-        if (noiseMap[x + 1, y, z + 1] > groundValue) { count += 4; }
-        if (noiseMap[x, y, z + 1] > groundValue) { count += 8; }
-        if (noiseMap[x, y + 1, z] > groundValue) { count += 16; }
-        if (noiseMap[x + 1, y + 1, z] > groundValue) { count += 32; }
-        if (noiseMap[x + 1, y + 1, z + 1] > groundValue) { count += 64; }
-        if (noiseMap[x, y + 1, z + 1] > groundValue) { count += 128; }
-
-        return invert ? 255 - count : count;
-    }
-
 }
 
 public class MeshData
@@ -438,8 +397,5 @@ public class MeshData
     public List<Vector2> uvs = new List<Vector2>();
     public List<int> triangles = new List<int>();
 
-    public MeshData()
-    {
-
-    }
+    public MeshData(){ }
 }

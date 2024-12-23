@@ -2,60 +2,52 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Display the mesh or noise in the editor for testing purposes without play
 public class DisplayMesh : MonoBehaviour
 {
-    public enum DisplayMode { None, Noise2D, Noise3D, Mesh}
-    public DisplayMode displayType = DisplayMode.Noise2D;
-
     public static DisplayMesh instance;
-    private void Awake()
-    {
+    private void Awake() {
         instance = this;
     }
 
-    public Transform plane;
-    public Transform meshTest, meshHolder;
+    [SerializeField] private ChunkSettingsSO chunkSO;
 
-    public ChunkSettingsSO chunkSO;
-    public Vector3Int numberOfChunks;
+    [SerializeField] private Transform plane;
+    private Renderer planeRd;
+    
+    [SerializeField] private Transform meshHolder;
+    private List<Renderer> meshesTestRd = new List<Renderer>();
 
-    public int yAxesTest;
-
-    Renderer planeRd;
-    public List<Renderer> meshesTestRd = new List<Renderer>();
-
-    private void Start()
-    {
+    public enum DisplayMode { None, Noise2D, Noise3D, Mesh}
+    [SerializeField] private DisplayMode displayType = DisplayMode.Noise2D;
+    [SerializeField] private int yAxesTest;
+    [SerializeField] private Vector3Int numberOfChunks;
+    
+    private void Start() {
         displayType = DisplayMode.None;
         DrawInEditor();
     }
 
-    private void OnValidate()
-    {
+    private void OnValidate() {
         if(numberOfChunks.x < 1) numberOfChunks.x = 1;
         if(numberOfChunks.y < 1) numberOfChunks.y = 1;
         if(numberOfChunks.z < 1) numberOfChunks.z = 1;
 
-        if (chunkSO != null)
-        {
-            chunkSO.OnValuesUpdated -= OnValuesUpdated; 
-            chunkSO.OnValuesUpdated += OnValuesUpdated;
+        if (chunkSO != null) {
+            chunkSO.OnUpdateMeshSettings -= OnValuesUpdated; 
+            chunkSO.OnUpdateMeshSettings += OnValuesUpdated;
         }
         DrawInEditor();
     }
 
-    void OnValuesUpdated()
-    {
-        if (!Application.isPlaying)
-        {
+    private void OnValuesUpdated() {
+        if (!Application.isPlaying) {
             DrawInEditor();
         }
     }
 
-    private void DrawInEditor()
-    {
-        for(int i = meshesTestRd.Count-1; i >= 0; i--)
-        {
+    private void DrawInEditor() {
+        for(int i = meshesTestRd.Count-1; i >= 0; i--) {
             if(meshesTestRd[i]== null)
                  meshesTestRd.RemoveAt(i);
         }

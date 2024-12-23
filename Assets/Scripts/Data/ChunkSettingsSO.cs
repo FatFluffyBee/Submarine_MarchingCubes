@@ -1,16 +1,15 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
 
+//This scriptable serve to hold and store the data of differnt biomes presets, from mesh generation data to render settings and bounds
 [CreateAssetMenu(fileName = "Data", menuName = "ScriptableObjects/ChunkSettingSO", order = 1)]
 public class ChunkSettingsSO : ScriptableObject
 {
-    //This scriptable serve to hold and store the data of differnt biomes presets, from mesh generation data to render settings and bounds
-    public event System.Action OnValuesUpdated;
-    public event System.Action UpdateRenderSettings;
+    public event System.Action OnUpdateMeshSettings;
+    public event System.Action OnUpdateRenderSettings;
     public bool autoUpdate;   
 
 [Header("Chunk General Settings")]
@@ -72,12 +71,10 @@ public class ChunkSettingsSO : ScriptableObject
     public bool fogActive = true;
     public Vector2 fogRange;
     public Color fogColor;
-
     public Color cameraBackgroundColor;
     public ParticleSystem cameraParticleSystem;
 
-    protected void OnValidate()
-    {
+    protected void OnValidate() {
         if(chunkSize.x < 1) chunkSize.x = 1;
         if(chunkSize.y < 1) chunkSize.y = 1;
         if(chunkSize.z < 1) chunkSize.z = 1;
@@ -100,16 +97,24 @@ public class ChunkSettingsSO : ScriptableObject
         if(cutoutNoiseOctaves < 1) cutoutNoiseOctaves = 1;
 
          if(autoUpdate)
-            NotifyOfUpdateValues();
+            UpdateAll();
     }
 
-    public void NotifyOfUpdateValues(){
-        if(OnValuesUpdated != null) {
-            OnValuesUpdated();
+    public void UpdateAll(){
+        UpdateMeshSettings();
+        UpdateRenderSettingsEvent();
+    }
+
+    public void UpdateMeshSettings() {
+        if(OnUpdateMeshSettings != null) {
+            OnUpdateMeshSettings();
         }
     }
+
     public void UpdateRenderSettingsEvent(){
-        UpdateRenderSettings?.Invoke();   // This method is called by the ChunkManager when it needs to update the render settings.  // The subscribed scripts will then update their render settings based on the current ChunkSettingsSO.  // This is a way to have a centralized place where all render settings are managed and updated.  // The other scripts can subscribe to this event to be notified whenever the render settings need to be updated.  // This design pattern allows for easier management of render settings, as it decouples the scripts that need to update their render settings from the scripts that define the render settings.  // It also allows for easier testing, as the render settings can be easily changed and tested without affecting the other scripts.  // This design pattern is used extensively in Unity's rendering system, as it allows
+        if(OnUpdateRenderSettings != null) {
+            OnUpdateRenderSettings();
+        }    
     }
 }
     public enum NoiseType { Perlin3D, Shore_Plateau};
