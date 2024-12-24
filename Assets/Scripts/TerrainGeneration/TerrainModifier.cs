@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TerrainModifier : MonoBehaviour
 {
-    public Camera mainCamera;
+    /*public Camera mainCamera;
     public float brushHeight, brushRadius;
     public float cooldownModifTerrain = 0.1f;
     float cooldownCount;
@@ -40,7 +40,7 @@ public class TerrainModifier : MonoBehaviour
             cooldownCount = 0;
         }
         cooldownCount+= Time.deltaTime;
-    }*/
+    }
     
     public static void UpdateMeshes(List<MeshFilter> meshFilters, List<MeshCollider> meshColliders, Vector3 positionHit, Vector3 normalHit, float radius, float height, AnimationCurve attenuationCurve)
     {
@@ -72,5 +72,5 @@ public class TerrainModifier : MonoBehaviour
             meshFilter.mesh = mesh;
             meshCollider.sharedMesh = mesh;
         }
-    }
+    }*/
 }
