@@ -6,13 +6,11 @@ using UnityEngine;
 public class LoadMeshNearby : MonoBehaviour 
 {
     //float rangeToLoadChunk = 1f;
-    private void Start() 
-    {
-        EndlessTerrain.instance.elementsWhoLoadMeshes.Add(this);
+    private void Start() {
+        EndlessTerrain.instance.AddMeshLoadingElement(this);
     }
 
-    private void OnDestroy() 
-    {
-        EndlessTerrain.instance.elementsWhoLoadMeshes.Remove(this);
+    private void OnDestroy() {
+        EndlessTerrain.instance.RemoveMeshLoadingElement(this);
     }
 }
