@@ -17,7 +17,7 @@ public class DisplayMesh : MonoBehaviour
     private Renderer planeRd;
     
     [SerializeField] private Transform meshHolder;
-    private List<Renderer> meshesTestRd = new List<Renderer>();
+    [SerializeField] private List<Renderer> meshesTestRd = new List<Renderer>(); //serialize to keep values
 
     public enum DisplayMode { None, Noise3D, Mesh}
     [SerializeField] private DisplayMode displayType = DisplayMode.Noise3D;
@@ -26,7 +26,7 @@ public class DisplayMesh : MonoBehaviour
     
     private void Start() {
         displayType = DisplayMode.None;
-        DrawInEditor();
+        ResetDisplay();
     }
 
     //we redraw the mesh every time the chunkSO settings or display mesh data is modified
@@ -162,14 +162,11 @@ public class DisplayMesh : MonoBehaviour
             }
     }
 
-    public static Color[] GenerateColorMap(float[,] noiseMap)
-    {
+    public static Color[] GenerateColorMap(float[,] noiseMap) {
         Color[] colorMap = new Color[noiseMap.GetLength(0) * noiseMap.GetLength(0)];
 
-        for (int i = 0; i < noiseMap.GetLength(0); i++)
-        {
-            for (int j = 0; j < noiseMap.GetLength(0); j++)
-            {
+        for (int i = 0; i < noiseMap.GetLength(0); i++) {
+            for (int j = 0; j < noiseMap.GetLength(0); j++) {
                 colorMap[i * noiseMap.GetLength(0) + j] = Color.Lerp(Color.white, Color.black, noiseMap[i, j]);
             }
         }

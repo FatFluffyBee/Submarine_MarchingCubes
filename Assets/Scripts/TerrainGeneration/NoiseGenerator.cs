@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 //Generate a 2D or 3D noise map
@@ -22,7 +23,7 @@ public static class NoiseGenerator
     
     //Generate a 2D noise map 
     public static float[,] GenerateNoiseMap2D(Vector2Int size, float noiseScale, float persistence, float lacunarity, int octaves, int seed, Vector2 offset, Vector2 squichiness) {
-        float[,] perlinTab = new float[size.x, size.y];
+        float[,] perlinArray = new float[size.x, size.y];
         Vector2[] octaveOffsets = new Vector2[octaves];
         Vector2 halfSize = new Vector2((size.x - 1) / 2, (size.y - 1) / 2);
 
@@ -58,16 +59,16 @@ public static class NoiseGenerator
                     frequency *= lacunarity;
                     amplitude *= persistence;
                 }
-                perlinTab[x, y] = Mathf.InverseLerp(0, maxPossibleHeight * 0.7f, noiseValue);
+                perlinArray[x, y] = Mathf.InverseLerp(0, maxPossibleHeight * 0.7f, noiseValue);
             }
         }
-        return perlinTab;
+        return perlinArray;
     }
 
     //Generate a 3D noise map, same principal than 2D but with an added dimension
     public static float[,,] GenerateMapPerlin3D(Vector3Int size, float noiseScale, float persistence, float lacunarity, int octaves, int seed, Vector3 offset) {
         System.Random prng = new System.Random(seed);
-        float[,,] perlinTab = new float[size.x, size.y, size.z];
+        float[,,] perlinArray = new float[size.x, size.y, size.z];
         Vector3[] octaveOffsets = new Vector3[octaves];
 
         float maxPossibleHeight = 0;
@@ -104,19 +105,18 @@ public static class NoiseGenerator
                         frequency *= lacunarity;
                         amplitude *= persistence;
                     }
-                    perlinTab[x, y, z] = Mathf.InverseLerp(0f, maxPossibleHeight * 0.7f, noiseValue);
+                    perlinArray[x, y, z] = Mathf.InverseLerp(0f, maxPossibleHeight * 0.7f, noiseValue);
                 }
         
-        return perlinTab;
+        return perlinArray;
     }
 
     public static float[,,] GeneratePlateauNoiseMap3D(Vector3Int size, float noiseScale, float persistence, float lacunarity, int octaves, int seed, Vector3 offset, Vector4 xBound, 
     Vector4 yBound, Vector4 zBound, ChunkSettingsSO chunkSO) {
         Vector3 halfSize = new Vector3((size.x - 1) / 2, (size.y - 1) / 2, (size.z - 1)/2 );
         System.Random prng = new System.Random(seed);
-        float[,,] perlinTab = new float[size.x, size.y, size.z];
-        float[,] topCutoutMap = GenerateNoiseMap2D(new Vector2Int(size.x, size.z), chunkSO.cutoutNoiseScale, chunkSO.cutoutNoisePersistance, chunkSO.cutoutNoiseLacunarity, 
-        chunkSO.cutoutNoiseOctaves, seed, new Vector2(offset.x, offset.z) + chunkSO.cutoutNoiseOffset, chunkSO.cutoutMapSquichiness);
+        float[,,] perlinArray = new float[size.x, size.y, size.z];
+        
 
         Vector3[] octaveOffsets = new Vector3[octaves];
         float maxPossibleHeight = 0;
@@ -134,14 +134,14 @@ public static class NoiseGenerator
             amplitude *= persistence;
         }
 
-        //check if out of bound -> not bother with calculus // To Remove later cause lerping between edges like the cutout noise
+        //main loop for perlin values
         for(int x = 0; x < size.x; x++)
             for(int y = 0; y < size.y; y++) 
                 for(int z = 0; z < size.z; z++) {
                     //We remove out of bounds pos to avoid useless calculations
                     Vector3 posWithOffset = new Vector3(x, y, z) + offset;
                     if(IsCoordinateInBound(posWithOffset, xBound, yBound, zBound, out float result)) {
-                        perlinTab[x, y, z] = result;
+                        perlinArray[x, y, z] = result;
                         continue;
                     }
 
@@ -162,157 +162,32 @@ public static class NoiseGenerator
                     }
 
                     //Normalizing noise values to work between 0 and 1
-                    perlinTab[x, y, z] = Mathf.InverseLerp(0f, maxPossibleHeight * 0.7f, noiseValue);
+                    perlinArray[x, y, z] = Mathf.InverseLerp(0f, maxPossibleHeight * 0.7f, noiseValue);
 
                     if(chunkSO.useEaseCurve) {
-                        perlinTab[x, y, z] = chunkSO.noiseEaseCurve.Evaluate(perlinTab[x, y, z]);
+                        perlinArray[x, y, z] = chunkSO.noiseEaseCurve.Evaluate(perlinArray[x, y, z]);
                     }
                 }
 
         //Plateau Noise, Multiply the noise of a whole collection of y layers according to a modulo, 
-        if(chunkSO.addPlateau)
-        {
-            float minModulo = chunkSO.bottomPlateauWidth;
-            float maxModulo = chunkSO.plateauModulo - chunkSO.topPlateauWidth;
-            float plateauWidth = chunkSO.bottomPlateauWidth + chunkSO.topPlateauWidth + 1;
-
-             for(int y = 0; y < size.y; y++) //pour optimiser, on s'assure d'avoir un bon y sans iterer dans x et y
-             {
-                int yPos = y + (int)offset.y;
-                float modulo = yPos % chunkSO.plateauModulo; 
-
-                if(modulo < 0) modulo = chunkSO.plateauModulo + modulo;
-
-                if(modulo <= minModulo || modulo >= maxModulo)
-                {
-                    float ratio;
-
-                    if(modulo <= minModulo)
-                        ratio = modulo / (minModulo + 1);
-                    else if(modulo == 0)
-                        ratio = 0;
-                    else
-                        ratio = (chunkSO.plateauModulo - modulo) / (chunkSO.topPlateauWidth + 1);
-
-                    for(int x = 0; x < size.x; x++)
-                        for(int z = 0; z < size.z; z++)
-                        {
-                            perlinTab[x, y, z] *= Mathf.Lerp(1, chunkSO.plateauModifMax, ratio);
-                        }
-                }
-             }
+        if(chunkSO.addPlateau) {
+            AddPlateauToNoiseMap(ref perlinArray, offset, chunkSO);
         }
 
-        //Make a max height for each point to get a surfacy look where structure stops before reaching the top
-        //We compare the ypos with a 2d noise which input are x and z. we then determine a max yThreshold for the column, and we lerp the value accordingly
-        if(chunkSO.addTopCutout)
-        {
-            for(int x = 0; x < size.x; x++) {
-                for(int z = 0; z < size.z; z++){
-                    float yThreshold = topCutoutMap[x, z] * (chunkSO.cutoutThresholdRange.y - chunkSO.cutoutThresholdRange.x) + chunkSO.cutoutThresholdRange.x;
-
-                    for(int y = 0; y < size.y; y++)
-                        if(y + offset.y > yThreshold)
-                        {
-                            if(y + offset.y < yThreshold + chunkSO.cutoutThresholdLerpLength) //dans la range du lerp
-                            {
-                                perlinTab[x, y, z] = Mathf.Lerp(perlinTab[x, y, z], yBound.w, (y + offset.y - yThreshold) /  chunkSO.cutoutThresholdLerpLength);
-                            }
-                            else  //hors de la range du lerp
-                            {
-                                perlinTab[x, y, z] = yBound.w;;
-                            }
-                        }
-                }
-            }
+        //Top cutout for a natural looking top from above
+        if(chunkSO.addTopCutout) {
+            AddTopCutout(ref perlinArray, offset, chunkSO);
         }           
 
         if(chunkSO.addEdgeMapLerp) { // add lerp to edges of map
-            Vector2 xLerpBound = new Vector2(chunkSO.xBound.x + chunkSO.lerpRange, chunkSO.xBound.y - chunkSO.lerpRange);
-            Vector2 yLerpBound = new Vector2(chunkSO.yBound.x + chunkSO.lerpRange, chunkSO.yBound.y - chunkSO.lerpRange);
-            Vector2 zLerpBound = new Vector2(chunkSO.zBound.x + chunkSO.lerpRange, chunkSO.zBound.y - chunkSO.lerpRange);
-
-            for(int x = 0; x < size.x; x++)
-            {
-                float xPos = x + (int)offset.x;
-
-                if(xPos < xBound.x || xPos > xBound.y)
-                    continue;
-                    
-                 for(int y = 0; y< size.y; y++)
-                 {
-                    float yPos = y + (int)offset.y;
-
-                    if(yPos < yBound.x || yPos > yBound.y)
-                        continue;
-
-                    for(int z = 0; z < size.z; z++)
-                    {
-                        float zPos = z + (int)offset.z;
-
-                        if(zPos < zBound.x || zPos > zBound.y)
-                            continue;
-                        
-                        float count = 0;
-                        float noise = perlinTab[x, y, z];                       
-
-                        if(xPos <= xLerpBound.x)
-                        {
-                            float ratio = (xPos - xLerpBound.x) / chunkSO.lerpRange;
-                            ratio *= ratio * ratio;
-                            noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.xBound.z : chunkSO.xBound.z ,-ratio);
-                            count++;
-                        }
-                        if(xPos >= xLerpBound.y)
-                        {
-                            float ratio = (xPos - xLerpBound.y) / chunkSO.lerpRange;
-                            ratio *= ratio * ratio;
-                            noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.xBound.w : chunkSO.xBound.w ,ratio);
-                            count++;
-                        }
-
-                        if(yPos <= yLerpBound.x)
-                        {
-                            float ratio = (yPos - yLerpBound.x) / chunkSO.lerpRange;
-                            ratio *= ratio * ratio;
-                            noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.yBound.z : chunkSO.yBound.z ,-ratio);
-                            count++;
-                        }
-                        if(yPos >= yLerpBound.y)
-                        {
-                            float ratio = (yPos - yLerpBound.y) / chunkSO.lerpRange;
-                            ratio *= ratio * ratio;
-                            noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.yBound.w : chunkSO.yBound.w ,ratio);
-                            count++;
-                        }
-
-                        if(zPos <= zLerpBound.x)
-                        {
-                            float ratio = (zPos - zLerpBound.x) / chunkSO.lerpRange;
-                            ratio *= ratio * ratio;
-                            noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.zBound.z : chunkSO.zBound.z ,-ratio);
-                            count++;
-                        }
-
-                        if(zPos >= zLerpBound.y)
-                        {
-                            float ratio = (zPos - zLerpBound.y) / chunkSO.lerpRange;
-                            ratio *= ratio * ratio;
-                            noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.zBound.w : chunkSO.zBound.w ,ratio);
-                            count++;
-                        }
-
-                        perlinTab[x, y, z] = noise;
-                    }
-                 }  
-            }   
+            AddLerpedEdges(ref perlinArray, offset, chunkSO);
         }
-        return perlinTab;
+        return perlinArray;
     }
     
     //Custom function to return a 3D perlin noise (usually only exists in 2D), it has a tendency to do straight line along origin 
     //but its fast and efficient
-    public static float PerlinNoise3D(float x, float y, float z) {
+    private static float PerlinNoise3D(float x, float y, float z) {
         float noise = 0.0f;
 
         // Get all permutations of noise for each individual axis
@@ -331,7 +206,7 @@ public static class NoiseGenerator
     }
 
     //check if pos is out of bounds
-    public static bool IsCoordinateInBound(Vector3 pos, Vector4 xBound, Vector4 yBound, Vector4 zBound, out float boundResult) {
+    private static bool IsCoordinateInBound(Vector3 pos, Vector4 xBound, Vector4 yBound, Vector4 zBound, out float boundResult) {
         if(pos.y < yBound.x) {
             boundResult = yBound.z;
             return true;
@@ -364,4 +239,142 @@ public static class NoiseGenerator
         boundResult = -1;
         return false;
     } 
+
+    private static bool IsCoordinateInBound(Vector3 pos, Vector2 xBound, Vector2 yBound, Vector2 zBound) {
+        if(pos.y < yBound.x) {
+            return true;
+        }
+
+        if(pos.y > yBound.y) {
+            return true;
+        }
+
+        if(pos.x < xBound.x) {
+            return true;
+        }
+
+        if(pos.x > xBound.y) {
+            return true;
+        }
+
+        if(pos.z < zBound.x) {
+            return true;
+        }
+
+        if(pos.z > zBound.y) {
+            return true;
+        }
+        return false;
+    } 
+
+    //add lerped plateau to specific modulo
+    private static void AddPlateauToNoiseMap(ref float[,,] perlinArray, Vector3 posOffset, ChunkSettingsSO chunkSO) {
+        float minModulo = chunkSO.bottomPlateauWidth;
+        float maxModulo = chunkSO.plateauModulo - chunkSO.topPlateauWidth;
+
+        for(int y = 0; y < chunkSO.chunkSize.y + 1; y++) {
+            int yPos = y + (int)posOffset.y;
+            float modulo = yPos % chunkSO.plateauModulo; 
+
+            if(modulo < 0) {
+                modulo += chunkSO.plateauModulo;
+            }
+
+            //ratio is how close to the plateau modulo and in range the pos is, so we can lerp the plateau over a range of y values
+            if(modulo <= minModulo || modulo >= maxModulo) {
+                float ratio;
+                if(modulo <= minModulo) {
+                    ratio = modulo / (minModulo + 1);
+                } else if(modulo == 0) {
+                    ratio = 0;
+                } else {
+                    ratio = (chunkSO.plateauModulo - modulo) / (chunkSO.topPlateauWidth + 1);
+                }
+
+                //we then modify all cells of the y row
+                for(int x = 0; x < chunkSO.chunkSize.x + 1; x++)
+                    for(int z = 0; z < chunkSO.chunkSize.z + 1; z++) {
+                        perlinArray[x, y, z] *= Mathf.Lerp(1, chunkSO.plateauModifMax, ratio);
+                    }
+            }
+        }
+    }
+
+    //Make a max height for each point to get a surfacy look where structure stops before reaching the top
+    //We compare the ypos with a 2d noise which input are x and z. we then determine a max yThreshold for the column, and we lerp the value accordingly
+    private static void AddTopCutout(ref float[,,] perlinArray, Vector3 posOffset, ChunkSettingsSO chunkSO) {
+        float[,] topCutoutMap = GenerateNoiseMap2D(new Vector2Int(chunkSO.chunkSize.x + 1, chunkSO.chunkSize.z + 1), chunkSO.cutoutNoiseScale, chunkSO.cutoutNoisePersistance, chunkSO.cutoutNoiseLacunarity, 
+        chunkSO.cutoutNoiseOctaves, chunkSO.seed, new Vector2(posOffset.x, posOffset.z) + chunkSO.cutoutNoiseOffset, chunkSO.cutoutMapSquichiness);
+        
+        for(int x = 0; x < chunkSO.chunkSize.x + 1; x++) {
+            for(int z = 0; z < chunkSO.chunkSize.z + 1; z++){
+                float yThreshold = topCutoutMap[x, z] * (chunkSO.cutoutThresholdRange.y - chunkSO.cutoutThresholdRange.x) + chunkSO.cutoutThresholdRange.x;
+                for(int y = 0; y < chunkSO.chunkSize.y + 1; y++) {
+                    if(y + posOffset.y > yThreshold) {
+                        if(y + posOffset.y < yThreshold + chunkSO.cutoutThresholdLerpLength) { //dans la range du lerp
+                            perlinArray[x, y, z] = Mathf.Lerp(perlinArray[x, y, z], chunkSO.yBound.w, (y + posOffset.y - yThreshold) /  chunkSO.cutoutThresholdLerpLength);
+                        } else {
+                            perlinArray[x, y, z] = chunkSO.yBound.w;;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static void AddLerpedEdges(ref float[,,] perlinArray, Vector3 posOffset, ChunkSettingsSO chunkSO) { //todo might be a better a way to wrap this
+        Vector2 xLerpBound = new Vector2(chunkSO.xBound.x + chunkSO.lerpRange, chunkSO.xBound.y - chunkSO.lerpRange);
+        Vector2 yLerpBound = new Vector2(chunkSO.yBound.x + chunkSO.lerpRange, chunkSO.yBound.y - chunkSO.lerpRange);
+        Vector2 zLerpBound = new Vector2(chunkSO.zBound.x + chunkSO.lerpRange, chunkSO.zBound.y - chunkSO.lerpRange);
+        
+        for(int x = 0; x < chunkSO.chunkSize.x + 1; x++) {
+            for(int y = 0; y < chunkSO.chunkSize.y + 1; y++) {
+                for(int z = 0; z < chunkSO.chunkSize.z + 1; z++) {
+                    float xPos = x + posOffset.x;
+                    float yPos = y + posOffset.y;
+                    float zPos = z + posOffset.z;
+
+                    float noise = perlinArray[x, y, z];  
+
+                    //lerp on edge noise with the edge value to get more natural looking seem, even around multiple seams 
+                    if(xPos <= xLerpBound.x) {
+                        float ratio = - (xPos - xLerpBound.x) / chunkSO.lerpRange;
+                        ratio *= ratio * ratio;
+                        noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.xBound.z : chunkSO.xBound.z ,ratio);
+                    }
+
+                    if(xPos >= xLerpBound.y) {
+                        float ratio = (xPos - xLerpBound.y) / chunkSO.lerpRange;
+                        ratio *= ratio * ratio;
+                        noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.xBound.w : chunkSO.xBound.w ,ratio);
+                    }
+
+                    if(yPos <= yLerpBound.x) {
+                        float ratio = - (yPos - yLerpBound.x) / chunkSO.lerpRange;
+                        ratio *= ratio * ratio;
+                        noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.yBound.z : chunkSO.yBound.z ,ratio);
+                    }
+                    if(yPos >= yLerpBound.y) {
+                        float ratio = (yPos - yLerpBound.y) / chunkSO.lerpRange;
+                        ratio *= ratio * ratio;
+                        noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.yBound.w : chunkSO.yBound.w ,ratio);
+                    }
+
+                    if(zPos <= zLerpBound.x) {
+                        float ratio = - (zPos - zLerpBound.x) / chunkSO.lerpRange;
+                        ratio *= ratio * ratio;
+                        noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.zBound.z : chunkSO.zBound.z ,ratio);
+                    }
+
+                    if(zPos >= zLerpBound.y) {
+                        float ratio = (zPos - zLerpBound.y) / chunkSO.lerpRange;
+                        ratio *= ratio * ratio;
+                        noise = Mathf.Lerp(noise, chunkSO.invert? 1 - chunkSO.zBound.w : chunkSO.zBound.w ,ratio);
+                    }
+
+                    perlinArray[x, y, z] = noise;
+                }
+            }  
+        }   
+    }
 }

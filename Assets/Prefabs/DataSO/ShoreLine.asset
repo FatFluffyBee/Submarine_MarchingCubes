@@ -26,16 +26,16 @@ MonoBehaviour:
   lacunarity: 1.8
   octaves: 5
   seed: 895
-  posOffset: {x: 0, y: -41.8, z: 0}
+  posOffset: {x: -34.7, y: -312.3, z: -164.4}
   noiseSquichiness: {x: 1, y: 3, z: 1}
-  addTopCutout: 1
+  addTopCutout: 0
   cutoutNoiseScale: 160.12
   cutoutNoisePersistance: 0.448
   cutoutNoiseLacunarity: 1
   cutoutNoiseOctaves: 4
   cutoutMapSquichiness: {x: 1, y: 1}
   cutoutNoiseOffset: {x: 0, y: 0}
-  cutoutThresholdLerpLength: 15
+  cutoutThresholdLerpLength: 35
   cutoutThresholdRange: {x: -100, y: 0}
   addPlateau: 0
   plateauModulo: 8
@@ -67,11 +67,11 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  addEdgeMapLerp: 0
-  lerpRange: 5
-  xBound: {x: -200, y: 200, z: 0, w: 0}
-  yBound: {x: -400, y: 0, z: 0, w: 0}
-  zBound: {x: -200, y: 200, z: 0, w: 0}
+  addEdgeMapLerp: 1
+  lerpRange: 100
+  xBound: {x: -200, y: 200, z: 1, w: 1}
+  yBound: {x: -400, y: 0, z: 1, w: 0}
+  zBound: {x: -200, y: 200, z: 1, w: 1}
   skyBoxColor:
     serializedVersion: 2
     key0: {r: 0.92141336, g: 0.95855045, b: 0.9622642, a: 1}

@@ -26,7 +26,7 @@ MonoBehaviour:
   lacunarity: 1.59
   octaves: 5
   seed: 895
-  posOffset: {x: -48.76, y: -24.91, z: -34.52}
+  posOffset: {x: -54.4, y: -27.1, z: -34.52}
   noiseSquichiness: {x: 1, y: 2, z: 1}
   addTopCutout: 1
   cutoutNoiseScale: 160

@@ -43,6 +43,7 @@ public class EndlessTerrain : MonoBehaviour
 
     //Main functions which handle the chunks 
     void UpdateChunks() {
+        Debug.Log("Working");
         //generate a list of all key chunk checked this round, then its pass to next loop and all pos not checked are hidden (chunk out of rangze)
         List<Vector3> chunkCheckedThisLoop = new List<Vector3>(); 
         List<Vector3> loadCollOfChunk = new List<Vector3>();    
@@ -239,7 +240,6 @@ public class EndlessTerrain : MonoBehaviour
             elementsWhoLoadMeshes.Remove(loadMesh);
         }
     }
-
 
     public class ChunkData
     {
