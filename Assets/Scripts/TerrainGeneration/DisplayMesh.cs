@@ -117,7 +117,7 @@ public class DisplayMesh : MonoBehaviour
                         Vector3 maxClampSide = Vector3.zero;
 
                         //we check if the chunk is on a bound and so if it needs to be clamped
-                        if(x == 0 || x == numberOfChunks.x - 1) minClampSide.x = 1; 
+                        if(x == 0) minClampSide.x = 1; 
                         if(x == numberOfChunks.x - 1) maxClampSide.x = 1;
                         if(y == 0) minClampSide.y = 1; 
                         if(y == numberOfChunks.y - 1) maxClampSide.y = 1;
