@@ -82,7 +82,7 @@ public class DisplayMesh : MonoBehaviour
             rd.enabled = false;
 
         float[,] noiseMap2D = new float[chunkSO.chunkSize.x+1, chunkSO.chunkSize.z+1];
-        float[,,] noiseMap3D = NoiseGenerator.Generate3DNoiseMap(chunkSO, planeRd.transform.position);
+        float[,,] noiseMap3D = NoiseGenerator.Generate3DNoiseMap(chunkSO, planeRd.transform.position, true);
 
         //we isolate one slice of the noise map 
         for(int x = 0; x < noiseMap3D.GetLength(0);  x++) 
@@ -109,7 +109,7 @@ public class DisplayMesh : MonoBehaviour
             for(int y = 0; y < numberOfChunks.y; y++)
                 for(int z = 0; z < numberOfChunks.z; z++) {
                     Vector3 pos = new Vector3(x * chunkSO.chunkSize.x, y * chunkSO.chunkSize.y, z * chunkSO.chunkSize.z) * chunkSO.meshScale;
-                    float[,,] noiseMap3D = NoiseGenerator.Generate3DNoiseMap(chunkSO, pos);
+                    float[,,] noiseMap3D = NoiseGenerator.Generate3DNoiseMap(chunkSO, pos, true);
 
                     // clamp the bound of the mesh so there is no seeing the inside and visibility of the mass is improved
                     if(chunkSO.clampEdgeNoiseValues) {

@@ -133,7 +133,7 @@ public class CameraControl : MonoBehaviour
     private float CalculateMaxZoom(Vector3 direction) {//calculate the maxzoom clipping distance
         int layerMask = LayerMask.GetMask("Terrain");
 
-        Debug.DrawLine(transform.position, direction * 100f, Color.red, 10f);
+        //Debug.DrawLine(transform.position, direction * 100f, Color.red, 10f);
         if(Physics.Raycast(transform.position, direction, out RaycastHit hit, maxManualZoom, layerMask)) 
             return hit.distance - clippingDist;
 

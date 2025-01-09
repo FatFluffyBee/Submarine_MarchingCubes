@@ -35,16 +35,15 @@ public class EndlessTerrain : MonoBehaviour
     }
 
     private void Update() {
-        if(chunkUpdateTimer > Time.time) {
+        if(chunkUpdateTimer < Time.time) {
             UpdateChunks();
-            chunkUpdateTimer = chunkUpdateFrequency + Time.deltaTime;
+            chunkUpdateTimer = chunkUpdateFrequency + Time.time;
         }
     }
 
     //Main functions which handle the chunks 
     void UpdateChunks() {
-        Debug.Log("Working");
-        //generate a list of all key chunk checked this round, then its pass to next loop and all pos not checked are hidden (chunk out of rangze)
+        //Generate a list of all key chunk checked this round, then its pass to next loop and all pos not checked are hidden (chunk out of rangze)
         List<Vector3> chunkCheckedThisLoop = new List<Vector3>(); 
         List<Vector3> loadCollOfChunk = new List<Vector3>();    
 
@@ -247,7 +246,7 @@ public class EndlessTerrain : MonoBehaviour
         EndlessTerrain endlessTerrain;
         public float[,,] noiseMap;
         public MeshData meshData;
-        public Mesh[] meshes = new Mesh[1];
+        public Mesh[] meshes = new Mesh[1]; //in case multiple meshes for lod but scrapped off
         MeshFilter meshFilter;
         MeshRenderer meshRenderer;
         public Collider collider;

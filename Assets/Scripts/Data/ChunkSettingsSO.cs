@@ -61,18 +61,19 @@ public class ChunkSettingsSO : ScriptableObject
     public Vector4 xBound, yBound, zBound;  
 
 [Header("Render Settings")]
-    public Gradient skyBoxColor;
-    public float ambientLightIntensity;
     public float sunIntensity;
     public Color sunColor;
     public Color substractiveShadowColor;
-    public Material waterMaterial;
+
+    public Color topAmbientLightColor;
+    public Color sideAmbientLightColor;
+    public Color botAmbientLightColor;
+
     public VolumeProfile postProcessVolume; 
+
     public bool fogActive = true;
     public Vector2 fogRange;
     public Color fogColor;
-    public Color cameraBackgroundColor;
-    public ParticleSystem cameraParticleSystem;
 
     protected void OnValidate() {
         if(chunkSize.x < 1) chunkSize.x = 1;
@@ -114,7 +115,7 @@ public class ChunkSettingsSO : ScriptableObject
     public void UpdateRenderSettingsEvent(){
         if(OnUpdateRenderSettings != null) {
             OnUpdateRenderSettings();
-        }    
+        }   
     }
 }
     public enum NoiseType { Perlin3D, Shore_Plateau};

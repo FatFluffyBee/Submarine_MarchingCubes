@@ -10,34 +10,34 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3804deba206d6d644b797350fa4393bb, type: 3}
-  m_Name: ShoreLine
+  m_Name: Cliffs
   m_EditorClassIdentifier: 
   autoUpdate: 1
   chunkSize: {x: 24, y: 24, z: 24}
   meshScale: 1
   groundValue: 0.669
-  material: {fileID: 2100000, guid: d2c6bbbc8d6ce7043b24f4a844b452bb, type: 2}
+  material: {fileID: 2100000, guid: d0b85d2a37a38bb4db3ffe9b2a805c77, type: 2}
   invert: 0
   interpolation: 1
   clampEdgeNoiseValues: 1
   noiseType: 1
   noiseScale: 30
   persistance: 0.39
-  lacunarity: 2.5
-  octaves: 5
-  seed: 884
-  posOffset: {x: -69.79, y: -67.5, z: 0}
-  noiseSquichiness: {x: 1, y: 3, z: 1}
+  lacunarity: 2
+  octaves: 4
+  seed: 895
+  posOffset: {x: -68.53, y: -83.8, z: 0}
+  noiseSquichiness: {x: 1, y: 0.2, z: 1}
   addTopCutout: 1
   cutoutNoiseScale: 160
-  cutoutNoisePersistance: 0.278
+  cutoutNoisePersistance: 0.295
   cutoutNoiseLacunarity: 2
   cutoutNoiseOctaves: 5
   cutoutMapSquichiness: {x: 1, y: 1}
   cutoutNoiseOffset: {x: 0, y: 0}
   cutoutThresholdLerpLength: 20
   cutoutThresholdRange: {x: -100, y: -30}
-  addPlateau: 1
+  addPlateau: 0
   plateauModulo: 14
   plateauModifMax: 1.04
   topPlateauWidth: 2
@@ -73,12 +73,12 @@ MonoBehaviour:
   yBound: {x: -400, y: 0, z: 1, w: 0}
   zBound: {x: -200, y: 200, z: 0, w: 0}
   sunIntensity: 0.1
-  sunColor: {r: 0.9009434, g: 0.995283, b: 1, a: 0}
+  sunColor: {r: 0.5283019, g: 0.5283019, b: 0.5283019, a: 0}
   substractiveShadowColor: {r: 0.044250563, g: 0.0064524733, b: 0.2735849, a: 0}
-  topAmbientLightColor: {r: 0.1509879, g: 0.22830136, b: 0.2735849, a: 0}
-  sideAmbientLightColor: {r: 0.105464585, g: 0.105464585, b: 0.2830189, a: 0}
+  topAmbientLightColor: {r: 0.36525455, g: 0.41892993, b: 0.4528302, a: 0}
+  sideAmbientLightColor: {r: 0.07796369, g: 0.07796369, b: 0.2264151, a: 0}
   botAmbientLightColor: {r: 0.022249905, g: 0.0412102, b: 0.18867922, a: 0}
   postProcessVolume: {fileID: 11400000, guid: 1cdd4fd51b9bb1148a47da55cc31f59d, type: 2}
-  fogActive: 1
-  fogRange: {x: 100, y: 200}
-  fogColor: {r: 0.5286579, g: 0.6244862, b: 0.6792453, a: 1}
+  fogActive: 0
+  fogRange: {x: 30, y: 80}
+  fogColor: {r: 0.14017443, g: 0.14017443, b: 0.3962264, a: 1}

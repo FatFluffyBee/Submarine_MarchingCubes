@@ -8,16 +8,20 @@ public static class NoiseGenerator
 {
     //no longer needed, cause the settings are contained in chunkSO and there is no different functions for creating noise
     //simplify the initialisation of different noise settings
-    public static float [,,] Generate3DNoiseMap(ChunkSettingsSO chunkSO, Vector3 posOffset) {
+    public static float [,,] Generate3DNoiseMap(ChunkSettingsSO chunkSO, Vector3 posOffset, bool inEditor) {
+
+        Vector3 realOffset = posOffset / chunkSO.meshScale; 
+        if(inEditor) realOffset += chunkSO.posOffset;
+
         switch (chunkSO.noiseType) {
             case NoiseType.Shore_Plateau:
                 return GeneratePlateauNoiseMap3D(chunkSO.chunkSize + Vector3Int.one, chunkSO.noiseScale, chunkSO.persistance, 
-                chunkSO.lacunarity, chunkSO.octaves, chunkSO.seed, chunkSO.posOffset + posOffset/chunkSO.meshScale, chunkSO.xBound, chunkSO.yBound, chunkSO.zBound,
+                chunkSO.lacunarity, chunkSO.octaves, chunkSO.seed, realOffset, chunkSO.xBound, chunkSO.yBound, chunkSO.zBound,
                  chunkSO);
             case NoiseType.Perlin3D:
             default:
                 return GenerateMapPerlin3D(chunkSO.chunkSize + Vector3Int.one, chunkSO.noiseScale, chunkSO.persistance, 
-                chunkSO.lacunarity, chunkSO.octaves, chunkSO.seed, chunkSO.posOffset + posOffset/chunkSO.meshScale);
+                chunkSO.lacunarity, chunkSO.octaves, chunkSO.seed, realOffset);
         }
     } 
     
@@ -308,7 +312,7 @@ public static class NoiseGenerator
         
         for(int x = 0; x < chunkSO.chunkSize.x + 1; x++) {
             for(int z = 0; z < chunkSO.chunkSize.z + 1; z++){
-                float yThreshold = topCutoutMap[x, z] * (chunkSO.cutoutThresholdRange.y - chunkSO.cutoutThresholdRange.x) + chunkSO.cutoutThresholdRange.x;
+                float yThreshold = (1-topCutoutMap[x, z]) * (chunkSO.cutoutThresholdRange.y - chunkSO.cutoutThresholdRange.x) + chunkSO.cutoutThresholdRange.x;
                 for(int y = 0; y < chunkSO.chunkSize.y + 1; y++) {
                     if(y + posOffset.y > yThreshold) {
                         if(y + posOffset.y < yThreshold + chunkSO.cutoutThresholdLerpLength) { //dans la range du lerp

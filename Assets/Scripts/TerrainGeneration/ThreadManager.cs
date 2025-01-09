@@ -22,7 +22,7 @@ public class ThreadManager : MonoBehaviour
     }
 
     void NoiseMapThread(Action<float[,,]> callback, Vector3 offset, ChunkSettingsSO chunkSO){
-        float[,,] noiseMap = NoiseGenerator.Generate3DNoiseMap(chunkSO, offset);
+        float[,,] noiseMap = NoiseGenerator.Generate3DNoiseMap(chunkSO, offset, false);
         lock (noiseMapThreadInfoQueue) {
             noiseMapThreadInfoQueue.Enqueue(new MapThreadInfo<float[,,]>(callback, noiseMap));
         }

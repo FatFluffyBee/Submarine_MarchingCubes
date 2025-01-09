@@ -18,25 +18,23 @@ public class BiomeInitializer : MonoBehaviour
 
     private void OnValidate() 
     {
-        if(cSSO != null) {
+            if(cSSO != null) {
             cSSO.OnUpdateRenderSettings -= UpdateRenderSettings;
             cSSO.OnUpdateRenderSettings += UpdateRenderSettings;
         }
     }
 
     public void UpdateRenderSettings(){
-        waterRd.material = cSSO.waterMaterial;
-        cam.backgroundColor = cSSO.cameraBackgroundColor;
-
         RenderSettings.sun = sun;
         sun.color = cSSO.sunColor;
         sun.intensity = cSSO.sunIntensity;
         RenderSettings.subtractiveShadowColor = cSSO.substractiveShadowColor;
 
-        RenderSettings.ambientSkyColor = cSSO.skyBoxColor.Evaluate(0);
-        RenderSettings.ambientEquatorColor = cSSO.skyBoxColor.Evaluate(.5f);
-        RenderSettings.ambientGroundColor = cSSO.skyBoxColor.Evaluate(1);
-        RenderSettings.ambientIntensity = cSSO.ambientLightIntensity;
+        RenderSettings.ambientMode = AmbientMode.Trilight;
+        RenderSettings.ambientLight = cSSO.topAmbientLightColor;
+        RenderSettings.ambientEquatorColor = cSSO.sideAmbientLightColor;
+        RenderSettings.ambientGroundColor = cSSO.botAmbientLightColor;
+        RenderSettings.ambientIntensity = 1.25f;
 
         RenderSettings.fog = cSSO.fogActive;
         RenderSettings.fogColor = cSSO.fogColor;

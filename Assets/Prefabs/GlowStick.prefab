@@ -300,12 +300,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 826b4cbf248ba9c4880c9ff6716913a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  light: {fileID: 3344597985858305162}
+  pointLight: {fileID: 3344597985858305162}
   mR: {fileID: 6439301939324948900}
-  timeToDie: 30
-  lightMaxIntensity: 1
-  lightMaxRange: 4
   startRotationSpeed: 100
+  timeToDie: 30
+  lightMaxIntensity: 10
   lightOverTime:
     serializedVersion: 2
     m_Curve:
@@ -348,8 +347,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  glowStart: {r: 0.13725491, g: 0.9960785, b: 0.19607845, a: 0}
+  lightMaxRange: 4
   glowEnd: {r: 0, g: 0, b: 0, a: 0}
+  glowStart: {r: 0.13725491, g: 0.9960785, b: 0.19607845, a: 0}
 --- !u!114 &783373744963155933
 MonoBehaviour:
   m_ObjectHideFlags: 0
